@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card"
 import { useState } from 'react'
 
 interface GeneratedScript {
+  style: string
+  duration: string
   hook: string
   scenes: {
     scene: number
@@ -17,9 +19,41 @@ interface GeneratedScript {
   hashtags: string[]
 }
 
+const STYLE_OPTIONS = [
+  {
+    id: 'unboxing',
+    name: '开箱测评',
+    duration: '60秒',
+    description: '从拆快递开始，展示使用过程和效果对比',
+    icon: '📦'
+  },
+  {
+    id: 'problem',
+    name: '痛点解决',
+    duration: '45秒',
+    description: '先展示痛点，再介绍产品如何解决',
+    icon: '🔥'
+  },
+  {
+    id: 'comparison',
+    name: '对比测评',
+    duration: '60秒',
+    description: '测试多款产品，最后推荐你的产品',
+    icon: '⚖️'
+  },
+  {
+    id: 'daily',
+    name: '日常使用',
+    duration: '45秒',
+    description: '展示日常使用场景，自然介绍产品',
+    icon: '🏠'
+  },
+]
+
 export default function Home() {
   const [productDescription, setProductDescription] = useState('')
   const [targetAudience, setTargetAudience] = useState('')
+  const [selectedStyle, setSelectedStyle] = useState('unboxing')
   const [result, setResult] = useState<GeneratedScript | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -43,6 +77,7 @@ export default function Home() {
         body: JSON.stringify({
           productDescription,
           targetAudience,
+          style: selectedStyle,
         }),
       })
 
@@ -64,7 +99,9 @@ export default function Home() {
     if (!result) return
 
     const scriptText = `
-🎬 TikTok电商广告脚本
+🎬 TikTok电商广告脚本（${result.style}风格）
+
+⏱️ 总时长：${result.duration}
 
 🪝 Hook（前3秒）：
 ${result.hook}
@@ -96,26 +133,53 @@ ${result.hashtags.join(' ')}
             TikTok电商脚本生成器
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            AI驱动的爆款广告脚本，10秒生成专业TikTok电商广告
+            基于真实爆款案例，生成可实际拍摄的视频脚本
           </p>
         </div>
 
         {/* Main Form */}
         <Card className="p-6 shadow-2xl">
           <div className="space-y-6">
+            {/* Style Selection */}
+            <div>
+              <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
+                选择脚本风格
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {STYLE_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setSelectedStyle(option.id)}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      selectedStyle === option.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">{option.icon}</div>
+                    <div className="font-semibold text-sm mb-1">{option.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{option.duration}</div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                选择适合你产品的风格，每种风格都基于真实爆款案例设计
+              </p>
+            </div>
+
             {/* Product Description Input */}
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
                 产品/品牌描述
               </label>
               <Textarea
-                placeholder="例如：一个可持续发展的咖啡品牌，每杯咖啡为非洲种植者提供10美分，主打有机和公平贸易..."
+                placeholder="例如：无线蓝牙耳机，续航30小时，降噪功能，舒适佩戴"
                 className="min-h-[150px] text-base"
                 value={productDescription}
                 onChange={(e) => setProductDescription(e.target.value)}
               />
               <p className="text-xs text-gray-500 mt-2">
-                描述你的产品、品牌特点、目标受众和核心卖点
+                描述你的产品特点、核心卖点，越具体越好
               </p>
             </div>
 
@@ -125,7 +189,7 @@ ${result.hashtags.join(' ')}
                 目标受众（可选）
               </label>
               <Textarea
-                placeholder="例如：25-35岁城市白领女性，关注健康和环保，愿意为品质付费..."
+                placeholder="例如：18-35岁喜欢听音乐的学生和白领"
                 className="min-h-[80px] text-base"
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
@@ -154,9 +218,16 @@ ${result.hashtags.join(' ')}
         {result && (
           <Card className="mt-8 p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                生成的脚本
-              </h2>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                  生成的脚本
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {result.style}风格 · {result.duration}
+                  </span>
+                </div>
+              </div>
               <Button
                 variant="outline"
                 onClick={handleCopy}
@@ -211,24 +282,24 @@ ${result.hashtags.join(' ')}
         {/* Features Section */}
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-            <div className="text-4xl mb-3">⚡</div>
-            <h3 className="font-bold mb-2">10秒生成</h3>
+            <div className="text-4xl mb-3">🎬</div>
+            <h3 className="font-bold mb-2">真实案例</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              基于AI模型，快速生成专业脚本
+              基于45-60秒真实爆款脚本设计
             </p>
           </div>
           <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="text-4xl mb-3">🎯</div>
-            <h3 className="font-bold mb-2">爆款结构</h3>
+            <h3 className="font-bold mb-2">4种风格</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              基于真实TikTok爆款案例优化
+              开箱测评、痛点解决、对比测评、日常使用
             </p>
           </div>
           <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="text-4xl mb-3">💰</div>
-            <h3 className="font-bold mb-2">高转化率</h3>
+            <h3 className="font-bold mb-2">可实际拍摄</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              针对电商场景优化，提升ROI
+              详细的画面描述和旁白，直接可用
             </p>
           </div>
         </div>
