@@ -1,9 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// 基于规则的 TikTok 广告脚本生成器
+function generateScriptByRules(productDescription: string, targetAudience?: string) {
+  // 生成 Hook（前3秒吸睛文案）
+  const hooks = [
+    `🔥 谁能想到，${productDescription} 竟然这么好用！`,
+    `😱 我终于找到${productDescription}的终极秘密！`,
+    `💡 停！买${productDescription}前先看这个！`,
+    `⚡ 90%的人都不知道的${productDescription}真相！`,
+    `🚀 ${productDescription}改变了我的生活，你也可以！`,
+  ]
+  const hook = hooks[Math.floor(Math.random() * hooks.length)]
+
+  // 生成场景
+  const scenes = [
+    {
+      scene: 1,
+      duration: '0-3秒',
+      content: '镜头快速切换，产品特写，配合快节奏音乐',
+      voiceover: hook,
+    },
+    {
+      scene: 2,
+      duration: '3-8秒',
+      content: '展示产品使用过程，突出核心卖点',
+      voiceover: `这是${productDescription}，${targetAudience || '所有人'}都能轻松上手。`,
+    },
+    {
+      scene: 3,
+      duration: '8-12秒',
+      content: '用户使用反馈/对比画面',
+      voiceover: `之前我还怀疑，现在每天都要用！`,
+    },
+    {
+      scene: 4,
+      duration: '12-18秒',
+      content: '产品细节特写+价格优势展示',
+      voiceover: `价格实惠，品质有保障，现在下单还能享受优惠！`,
+    },
+  ]
+
+  // 生成 CTA（行动号召）
+  const ctas = [
+    `点击下方链接，立即购买${productDescription}！`,
+    `现在点击，限时优惠等你来！`,
+    `别犹豫了，点击下方链接${productDescription}带回家！`,
+  ]
+  const cta = ctas[Math.floor(Math.random() * ctas.length)]
+
+  // 生成 Hashtags
+  const baseHashtags = ['#TikTokShop', '#好物推荐', '#必买']
+  const specificHashtags = [`${productDescription.split(' ')[0]}`, '#爆品', '#种草']
+  const hashtags = [...baseHashtags, ...specificHashtags.slice(0, 3)]
+
+  return {
+    hook,
+    scenes,
+    cta,
+    hashtags,
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,76 +73,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 调用OpenAI API生成TikTok电商脚本
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `你是TikTok电商广告脚本专家。你的任务是生成高转化率的TikTok广告脚本。
+    // 使用规则生成脚本
+    const result = generateScriptByRules(productDescription, targetAudience)
 
-必须严格返回JSON格式，不要任何解释文字，不要Markdown代码块。
-
-返回结构：
-{
-  "hook": "前3秒的吸睛文案（1句话）",
-  "scenes": [
-    {
-      "scene": 场景序号（1, 2, 3...）,
-      "duration": "时间范围（如'0-3秒'）",
-      "content": "画面描述（简短清晰）",
-      "voiceover": "旁白文案"
-    }
-  ],
-  "cta": "行动号召（1-2句话）",
-  "hashtags": ["#标签1", "#标签2", "#标签3"]
-}
-
-脚本要求：
-1. Hook必须在前3秒抓住注意力
-2. 每个场景时长控制在3-8秒
-3. 画面描述要具体、可拍摄
-4. 旁白要口语化、有节奏感
-5. CTA要直接、有紧迫感
-6. Hashtags要相关性强、热门`
-        },
-        {
-          role: "user",
-          content: `产品描述：${productDescription}
-
-${targetAudience ? `目标受众：${targetAudience}` : ''}
-
-请生成一个高转化率的TikTok电商广告脚本。`
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    })
-
-    const result = completion.choices[0]?.message?.content
-
-    if (!result) {
-      return NextResponse.json(
-        { error: '生成失败，请稍后重试' },
-        { status: 500 }
-      )
-    }
-
-    // 解析JSON
-    let parsedResult
-    try {
-      // 去除可能的Markdown代码块标记
-      const cleanResult = result.replace(/```json\n?|\n?```/g, '').trim()
-      parsedResult = JSON.parse(cleanResult)
-    } catch (e) {
-      console.error('JSON解析失败:', result)
-      return NextResponse.json(
-        { error: '生成格式错误，请重试' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json(parsedResult)
+    return NextResponse.json(result)
   } catch (error) {
     console.error('Generate API Error:', error)
     return NextResponse.json(
