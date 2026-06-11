@@ -1,235 +1,90 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// 从产品描述中提取关键词
-function extractKeywords(productDescription: string): {
-  productName: string
-  features: string[]
-  targetAudience: string
-} {
+// 从产品描述中提取关键信息
+function extractProductInfo(productDescription: string) {
   const keywords = productDescription.split(/[，,、。.\s]+/).filter(w => w.length > 1)
   const productName = keywords[0] || '这款产品'
   const features = keywords.slice(1, 4)
   return {
     productName,
     features,
-    targetAudience: keywords.slice(-1)[0] || '大家',
+    description: productDescription,
   }
 }
 
-// 风格1：开箱测评风（60秒）
-function generateUnboxingScript(
-  productName: string,
-  features: string[],
-  targetAudience: string
+// 生成完整的TikTok脚本（45-60秒）
+function generateCompleteScript(
+  productDescription: string,
+  targetAudience?: string
 ) {
-  const hooks = [
-    `花了${Math.floor(Math.random() * 20 + 10)}0块，我后悔了...不是因为贵，而是后悔买晚了！`,
-    `这个${productName}，我抱着试试看的心态买回来的，结果...`,
-    `本来不想买这个${productName}，但朋友推荐我就试试，没想到`,
-  ]
+  const { productName, features, description } = extractProductInfo(productDescription)
 
-  return {
-    style: '开箱测评',
-    duration: '60秒',
-    hook: hooks[Math.floor(Math.random() * hooks.length)],
+  // 完整的脚本结构：开头→痛点→发现→演示→效果→CTA
+  const script = {
+    style: '完整叙事',
+    duration: '50秒',
     scenes: [
+      // 场景1：开头（0-5秒）- 从具体问题开始
       {
         scene: 1,
         duration: '0-5秒',
-        content: '从拆快递开始，镜头特写包装',
-        voiceover: hooks[Math.floor(Math.random() * hooks.length)],
+        content: `特写：展示使用${productName}之前的问题场景，比如${features[0] || '使用不便'}的画面`,
+        voiceover: `作为${targetAudience || '普通人'}，每天都要面对${features[0] || '这个问题'}，真的很困扰`,
       },
+      // 场景2：痛点展示（5-15秒）- 具体的痛点
       {
         scene: 2,
         duration: '5-15秒',
-        content: '展示真实痛点（如：家里脏乱、产品问题）',
-        voiceover: `你看我这里，${features[0] || '每天都很麻烦'}，真的很让我头疼`,
+        content: `镜头切换：展示痛点场景，特写问题部位，比如${features[1] || '具体问题'}的细节`,
+        voiceover: `每次${features[0] || '使用'}的时候，${features[1] || '都会遇到这个问题'}，真的很烦`,
       },
+      // 场景3：发现产品（15-25秒）- 有来源的发现
       {
         scene: 3,
-        duration: '15-30秒',
-        content: '打开包装，取出产品，演示使用',
-        voiceover: `直到我买了这个${productName}，${features[1] || '真的改变了我的生活'}`,
+        duration: '15-25秒',
+        content: `画面切换：拆开${productName}的包装，展示产品细节`,
+        voiceover: `后来朋友推荐了${productName}，我就买来试试看`,
       },
+      // 场景4：使用演示（25-35秒）- 具体的使用过程
       {
         scene: 4,
-        duration: '30-45秒',
-        content: '延时摄影展示效果，或对比前后',
-        voiceover: `你们看这个效果，${features[2] || '我以前从来没想过这么好用'}`,
+        duration: '25-35秒',
+        content: `特写：展示${productName}的使用过程，比如${features[2] || '具体操作'}的动作`,
+        voiceover: `用起来真的很方便，${features[2] || '操作简单'}，节省了很多时间`,
       },
+      // 场景5：效果展示（35-45秒）- 前后对比
       {
         scene: 5,
-        duration: '45-60秒',
-        content: '展示日常使用，暗示价格/优惠',
-        voiceover: `最重要的是，这价格真的不贵。链接在下面，现在下单还有优惠`,
+        duration: '35-45秒',
+        content: `对比画面：左边是使用前，右边是使用后，特写效果的差异`,
+        voiceover: `你们看，用了之后${features[1] || '问题'}解决了，效果真的很明显`,
+      },
+      // 场景6：使用感受（45-50秒）- 时间证明
+      {
+        scene: 6,
+        duration: '45-50秒',
+        content: `日常场景：展示在日常生活中使用${productName}的画面`,
+        voiceover: `我现在每天都要用它，真的离不开它了`,
+      },
+      // 场景7：CTA（50-55秒）- 自然引导
+      {
+        scene: 7,
+        duration: '50-55秒',
+        content: `展示${productName}的包装，手指指向下方链接`,
+        voiceover: `链接在下面，有需要的可以看看，性价比真的不错`,
       },
     ],
-    cta: `最重要的是，这价格真的不贵。链接在下面，现在下单还有优惠`,
-    hashtags: ['#好物推荐', '#开箱测评', '#真实测评', '#种草', '#必买'],
+    cta: '链接在下面，有需要的可以看看',
+    hashtags: ['#TikTokShop', '#好物推荐', '#日常好物', '#性价比'],
   }
-}
 
-// 风格2：痛点解决风（45秒）
-function generateProblemSolutionScript(
-  productName: string,
-  features: string[],
-  targetAudience: string
-) {
-  const problems = [
-    `每天都被${features[0] || '这个问题'}困扰`,
-    `${features[0] || '这个问题'}真的让我受不了`,
-    `你们看，这就是我每天的状态`,
-  ]
-
-  return {
-    style: '痛点解决',
-    duration: '45秒',
-    hook: `${productName}的救命神器，我天天用`,
-    scenes: [
-      {
-        scene: 1,
-        duration: '0-5秒',
-        content: '展示痛点场景（如：低头、疲劳、脏乱）',
-        voiceover: `${productName}的救命神器，我天天用`,
-      },
-      {
-        scene: 2,
-        duration: '5-15秒',
-        content: '放大痛点，展示问题',
-        voiceover: `但是！${problems[Math.floor(Math.random() * problems.length)]}`,
-      },
-      {
-        scene: 3,
-        duration: '15-30秒',
-        content: '介绍产品，演示使用',
-        voiceover: `直到我朋友推荐了这个${productName}，${features[1] || '真的很好用'}`,
-      },
-      {
-        scene: 4,
-        duration: '30-45秒',
-        content: '展示日常使用，社交证明',
-        voiceover: `我现在每天都要用它，${targetAudience}都问我哪里买的`,
-      },
-    ],
-    cta: `链接在下面，${targetAudience}可以看看`,
-    hashtags: ['#好物推荐', '#生活小妙招', '#必备好物', '#种草', '#神器'],
-  }
-}
-
-// 风格3：对比测评风（60秒）
-function generateComparisonScript(
-  productName: string,
-  features: string[],
-  targetAudience: string
-) {
-  const competitors = ['这', '那', '另一款', '之前那款']
-  const problems = ['太贵了', '不好用', '没多久就坏了', '体验很差']
-
-  return {
-    style: '对比测评',
-    duration: '60秒',
-    hook: `我试了3款${productName}，最后只留了这款`,
-    scenes: [
-      {
-        scene: 1,
-        duration: '0-5秒',
-        content: '展示多款产品',
-        voiceover: `我试了3款${productName}，最后只留了这款`,
-      },
-      {
-        scene: 2,
-        duration: '5-20秒',
-        content: '逐一测试其他产品，指出问题',
-        voiceover: `${competitors[0]}款${problems[Math.floor(Math.random() * problems.length)]}，${competitors[1]}款也不好`,
-      },
-      {
-        scene: 3,
-        duration: '20-40秒',
-        content: '测试你的产品，突出优点',
-        voiceover: `但这${productName}不一样，${features[0] || '很好用'}，${features[1] || '性价比很高'}`,
-      },
-      {
-        scene: 4,
-        duration: '40-60秒',
-        content: '展示使用效果，对比结论',
-        voiceover: `用了几个月，真的没出问题，最重要的是还便宜`,
-      },
-    ],
-    cta: `链接在下面，我放在第一个了`,
-    hashtags: ['#好物推荐', '#对比测评', '#避坑指南', '#种草', '#性价比'],
-  }
-}
-
-// 风格4：日常使用风（45秒）
-function generateDailyUsageScript(
-  productName: string,
-  features: string[],
-  targetAudience: string
-) {
-  const scenarios = ['早晨', '下班回来', '周末', '日常']
-
-  return {
-    style: '日常使用',
-    duration: '45秒',
-    hook: `我的${scenarios[Math.floor(Math.random() * scenarios.length)]}日常，离不开这个${productName}`,
-    scenes: [
-      {
-        scene: 1,
-        duration: '0-10秒',
-        content: '展示日常使用场景',
-        voiceover: `我的${scenarios[Math.floor(Math.random() * scenarios.length)]}日常，离不开这个${productName}`,
-      },
-      {
-        scene: 2,
-        duration: '10-25秒',
-        content: '自然展示产品使用',
-        voiceover: `这${productName}${features[0] || '真的很好用'}，我用了好几个月了`,
-      },
-      {
-        scene: 3,
-        duration: '25-40秒',
-        content: '展示其他使用场景，社交证明',
-        voiceover: `${targetAudience}都问我在哪里买的，说是很好用`,
-      },
-      {
-        scene: 4,
-        duration: '40-45秒',
-        content: '暗示价格，CTA',
-        voiceover: `价格也很实惠，需要的可以看看`,
-      },
-    ],
-    cta: `价格也很实惠，需要的可以看看`,
-    hashtags: ['#好物推荐', '#日常好物', '#生活日常', '#种草', '#必备'],
-  }
-}
-
-// 主生成函数
-function generateScriptByStyle(
-  productDescription: string,
-  targetAudience: string | undefined,
-  style: string
-) {
-  const { productName, features, targetAudience: extractedAudience } = extractKeywords(productDescription)
-  const finalAudience = targetAudience || extractedAudience
-
-  switch (style) {
-    case 'unboxing':
-      return generateUnboxingScript(productName, features, finalAudience)
-    case 'problem':
-      return generateProblemSolutionScript(productName, features, finalAudience)
-    case 'comparison':
-      return generateComparisonScript(productName, features, finalAudience)
-    case 'daily':
-      return generateDailyUsageScript(productName, features, finalAudience)
-    default:
-      return generateUnboxingScript(productName, features, finalAudience)
-  }
+  return script
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { productDescription, targetAudience, style } = body
+    const { productDescription, targetAudience } = body
 
     if (!productDescription) {
       return NextResponse.json(
@@ -238,9 +93,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 根据选择的风格生成脚本
-    const selectedStyle = style || 'unboxing' // 默认开箱测评风
-    const result = generateScriptByStyle(productDescription, targetAudience, selectedStyle)
+    // 生成完整的脚本
+    const result = generateCompleteScript(productDescription, targetAudience)
 
     return NextResponse.json(result)
   } catch (error) {

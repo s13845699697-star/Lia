@@ -8,7 +8,6 @@ import { useState } from 'react'
 interface GeneratedScript {
   style: string
   duration: string
-  hook: string
   scenes: {
     scene: number
     duration: string
@@ -19,41 +18,9 @@ interface GeneratedScript {
   hashtags: string[]
 }
 
-const STYLE_OPTIONS = [
-  {
-    id: 'unboxing',
-    name: '开箱测评',
-    duration: '60秒',
-    description: '从拆快递开始，展示使用过程和效果对比',
-    icon: '📦'
-  },
-  {
-    id: 'problem',
-    name: '痛点解决',
-    duration: '45秒',
-    description: '先展示痛点，再介绍产品如何解决',
-    icon: '🔥'
-  },
-  {
-    id: 'comparison',
-    name: '对比测评',
-    duration: '60秒',
-    description: '测试多款产品，最后推荐你的产品',
-    icon: '⚖️'
-  },
-  {
-    id: 'daily',
-    name: '日常使用',
-    duration: '45秒',
-    description: '展示日常使用场景，自然介绍产品',
-    icon: '🏠'
-  },
-]
-
 export default function Home() {
   const [productDescription, setProductDescription] = useState('')
   const [targetAudience, setTargetAudience] = useState('')
-  const [selectedStyle, setSelectedStyle] = useState('unboxing')
   const [result, setResult] = useState<GeneratedScript | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -77,7 +44,6 @@ export default function Home() {
         body: JSON.stringify({
           productDescription,
           targetAudience,
-          style: selectedStyle,
         }),
       })
 
@@ -99,18 +65,21 @@ export default function Home() {
     if (!result) return
 
     const scriptText = `
-🎬 TikTok电商广告脚本（${result.style}风格）
+🎬 TikTok电商广告脚本
 
 ⏱️ 总时长：${result.duration}
 
-🪝 Hook（前3秒）：
-${result.hook}
-
-📝 分镜脚本：
+📝 完整脚本：
 ${result.scenes.map(scene => `
+${'='*60}
 【场景 ${scene.scene}】${scene.duration}
-画面：${scene.content}
-旁白：${scene.voiceover}
+${'='*60}
+
+📹 画面：
+${scene.content}
+
+🎙️ 旁白：
+${scene.voiceover}
 `).join('\n')}
 
 📢 行动号召（CTA）：
@@ -140,33 +109,6 @@ ${result.hashtags.join(' ')}
         {/* Main Form */}
         <Card className="p-6 shadow-2xl">
           <div className="space-y-6">
-            {/* Style Selection */}
-            <div>
-              <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                选择脚本风格
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {STYLE_OPTIONS.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setSelectedStyle(option.id)}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      selectedStyle === option.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
-                  >
-                    <div className="text-3xl mb-2">{option.icon}</div>
-                    <div className="font-semibold text-sm mb-1">{option.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{option.duration}</div>
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                选择适合你产品的风格，每种风格都基于真实爆款案例设计
-              </p>
-            </div>
-
             {/* Product Description Input */}
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
@@ -179,7 +121,7 @@ ${result.hashtags.join(' ')}
                 onChange={(e) => setProductDescription(e.target.value)}
               />
               <p className="text-xs text-gray-500 mt-2">
-                描述你的产品特点、核心卖点，越具体越好
+                描述你的产品特点、核心卖点、使用场景，越具体越好
               </p>
             </div>
 
@@ -235,30 +177,46 @@ ${result.hashtags.join(' ')}
                 📋 复制脚本
               </Button>
             </div>
+
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
-              {/* Hook */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4">
-                <p className="font-bold text-sm text-yellow-700 dark:text-yellow-300 mb-2">🪝 Hook（前3秒）</p>
-                <p className="text-gray-800 dark:text-gray-200">{result.hook}</p>
+              {/* Script Title */}
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+                  🎬 完整脚本（可直接拍摄）
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  从开头到结尾的完整叙事流程
+                </p>
               </div>
 
               {/* Scenes */}
               <div>
-                <p className="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3">📝 分镜脚本</p>
                 {result.scenes.map((scene) => (
-                  <div key={scene.scene} className="bg-white dark:bg-gray-700 rounded-lg p-4 mb-3 shadow">
-                    <div className="flex items-center gap-3 mb-2">
+                  <div key={scene.scene} className="bg-white dark:bg-gray-700 rounded-lg p-4 mb-4 shadow">
+                    <div className="flex items-center gap-3 mb-3">
                       <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-bold">
                         场景 {scene.scene}
                       </span>
                       <span className="text-sm text-gray-500 dark:text-gray-400">{scene.duration}</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      <span className="font-bold">画面：</span>{scene.content}
-                    </p>
-                    <p className="text-sm text-gray-800 dark:text-gray-200">
-                      <span className="font-bold">旁白：</span>{scene.voiceover}
-                    </p>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                          📹 画面：
+                        </p>
+                        <p className="text-sm text-gray-800 dark:text-gray-200 pl-4">
+                          {scene.content}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                          🎙️ 旁白：
+                        </p>
+                        <p className="text-sm text-gray-800 dark:text-gray-200 pl-4">
+                          {scene.voiceover}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -283,23 +241,23 @@ ${result.hashtags.join(' ')}
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="text-4xl mb-3">🎬</div>
-            <h3 className="font-bold mb-2">真实案例</h3>
+            <h3 className="font-bold mb-2">完整叙事</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              基于45-60秒真实爆款脚本设计
+              开头→痛点→发现→演示→效果→CTA
             </p>
           </div>
           <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-            <div className="text-4xl mb-3">🎯</div>
-            <h3 className="font-bold mb-2">4种风格</h3>
+            <div className="text-4xl mb-3">📹</div>
+            <h3 className="font-bold mb-2">可拍摄脚本</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              开箱测评、痛点解决、对比测评、日常使用
+              详细的画面描述和旁白
             </p>
           </div>
           <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="text-4xl mb-3">💰</div>
-            <h3 className="font-bold mb-2">可实际拍摄</h3>
+            <h3 className="font-bold mb-2">真实案例</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              详细的画面描述和旁白，直接可用
+              基于真实爆款脚本设计
             </p>
           </div>
         </div>
